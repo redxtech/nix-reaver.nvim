@@ -73,7 +73,7 @@ function M.get_latest_commit(owner, repo)
   local repo_url = string.format("https://github.com/%s/%s", owner, repo)
 
   -- run git ls-remote to get the latest commit hash
-  local handle = io.popen(string.format("git ls-remote %s HEAD", repo_url))
+  local handle = io.popen(string.format("git ls-remote %s HEAD 2>/dev/null", repo_url))
   if not handle then
     print("Failed to run git ls-remote")
     return
@@ -99,7 +99,7 @@ function M.get_latest_commit_hash(owner, repo, rev)
   local cmd_args = string.format("https://github.com/%s/%s %s", owner, repo, rev)
 
   -- run git ls-remote to get the latest commit hash
-  local handle = io.popen(string.format("nurl -H %s", cmd_args))
+  local handle = io.popen(string.format("nurl -H %s 2>/dev/null", cmd_args))
   if not handle then
     print("Failed to run nurl")
     return
