@@ -96,6 +96,7 @@ end
 --- @param repo string
 --- @param rev string
 function M.get_latest_commit_hash(owner, repo, rev)
+  -- TODO: add support for other branches, tags, etc
   local cmd_args = string.format("https://github.com/%s/%s %s", owner, repo, rev)
 
   -- run git ls-remote to get the latest commit hash
@@ -122,7 +123,7 @@ end
 
 --- @param node TSNode
 --- @param commit_hash string
-function M.update_git_rev(node, commit_hash)
+function M.update_git_rev_or_hash(node, is_rev, commit_hash)
   local set = node:child(1)
   if set and set:type() == "binding_set" then
     local bindings = set:named_children()
@@ -133,37 +134,18 @@ function M.update_git_rev(node, commit_hash)
       if key and value and key:type() == "attrpath" and value:type() == "string_expression" then
         local k = vim.treesitter.get_node_text(key, 0)
 
-        if k == "rev" then
+        local node_name = is_rev and "rev" or "hash"
+
+        if k == node_name then
           -- goto the node
           ts_utils.goto_node(value)
 
-          -- put the commit hash into the node
-          vim.api.nvim_put({ commit_hash }, "c", true, true)
-        end
-      end
-    end
-  end
-end
+          -- get position of the string
+          local start_row, start_col, end_row, end_col = value:range()
+          -- print(start_row, start_col, end_row, end_col)
 
---- @param node TSNode
---- @param hash string
-function M.update_git_rev_hash(node, hash)
-  local set = node:child(1)
-  if set and set:type() == "binding_set" then
-    local bindings = set:named_children()
-    for _, binding in ipairs(bindings) do
-      local key = binding:child(0)
-      local value = binding:child(2)
-
-      if key and value and key:type() == "attrpath" and value:type() == "string_expression" then
-        local k = vim.treesitter.get_node_text(key, 0)
-
-        if k == "hash" or k == "sha256" then
-          -- goto the node
-          ts_utils.goto_node(value)
-
-          -- put the commit hash into the node
-          vim.api.nvim_put({ hash }, "c", true, true)
+          -- replace the content between the quotes
+          vim.api.nvim_buf_set_text(0, start_row, start_col + 1, end_row, end_col - 1, { commit_hash })
         end
       end
     end

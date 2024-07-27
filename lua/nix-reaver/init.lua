@@ -17,13 +17,19 @@ function M.setup(opts)
         return
       end
 
+      reaver.update_git_rev_or_hash(node, true, commit_hash)
+
       local hash = reaver.get_latest_commit_hash(owner, repo, commit_hash)
-      reaver.update_git_rev(node, commit_hash)
       if not hash then
         return
       end
 
-      reaver.update_git_rev_hash(node, hash)
+      reaver.update_git_rev_or_hash(node, false, hash)
+
+      -- notify after updating
+      vim.schedule(function()
+        vim.notify(string.format("Updated %s to %s", repo, hash))
+      end)
     end
   end, {})
 end
